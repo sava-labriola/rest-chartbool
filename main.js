@@ -7,7 +7,6 @@ function chiamata_ajax() {
         'url': "http://157.230.17.132:4011/sales",
         'method': 'GET',
         'success': function(data) {
-            console.log(data);
             vendite_mese(data);
             vendite_per_venditore(data);
             chart1();
@@ -36,17 +35,13 @@ var spese_mensili = {
 };
     for (var i = 0; i < array.length; i++) {
         var cifra = array[i].amount;
-        console.log(cifra);
         var data = array[i].date;
-        console.log(data);
         var formato_data = moment(data, 'DD/MM/YYYY');
         var mese = formato_data.format('MMMM');
-        console.log(mese);
         if(spese_mensili.hasOwnProperty(mese)) {
             spese_mensili[mese] += cifra;
         }
     }
-    console.log(spese_mensili);
     chiavi = Object.keys(spese_mensili);
 
     valori = Object.values(spese_mensili);
