@@ -1,12 +1,32 @@
 $(document).ready(function () {
     chiamata_ajax();
+    modifica_vendite();
 });
+
+function modifica_ajax(venditore, mese, cifra) {
+    $.ajax({
+        'url': "http://157.230.17.132:4011/sales",
+        'method': 'POST',
+        'data': {
+            'salesman': venditore,
+            'date': mese ,
+            'amount': cifra
+        },
+        'success': function(data) {
+            chiamata_ajax();
+        },
+        'error': function() {
+            alert('errore');
+        }
+    });
+}
 
 function chiamata_ajax() {
     $.ajax({
         'url': "http://157.230.17.132:4011/sales",
         'method': 'GET',
         'success': function(data) {
+            console.log(data);
             vendite_mese(data);
             vendite_per_venditore(data);
             chart1();
@@ -19,7 +39,7 @@ function chiamata_ajax() {
 }
 
 function vendite_mese(array) {
-var spese_mensili = {
+var vendite_mensili = {
     'January': 0,
     'February': 0,
     'March': 0,
@@ -34,25 +54,26 @@ var spese_mensili = {
     'December': 0
 };
     for (var i = 0; i < array.length; i++) {
-        var cifra = array[i].amount;
+        if(isNaN(array[i].amount)) {
+            array[i].amount = 0;
+        }
+        var cifra = parseInt(array[i].amount);
         var data = array[i].date;
         var formato_data = moment(data, 'DD/MM/YYYY');
         var mese = formato_data.format('MMMM');
-        if(spese_mensili.hasOwnProperty(mese)) {
-            spese_mensili[mese] += cifra;
-        }
+        vendite_mensili[mese] += cifra;
     }
-    chiavi = Object.keys(spese_mensili);
+    chiavi = Object.keys(vendite_mensili);
 
-    valori = Object.values(spese_mensili);
+    valori = Object.values(vendite_mensili);
 }
 
 function vendite_per_venditore(array) {
     var venditori = {};
-    var spese_totali = 0;
+    var vendite_totali = 0;
     for (var i = 0; i < array.length; i++) {
-        spese_totali += array[i].amount;
-        var cifra = array[i].amount;
+        vendite_totali += parseInt(array[i].amount);
+        var cifra = parseInt(array[i].amount);
         var venditore = array[i].salesman;
         if(!venditori.hasOwnProperty(venditore)) {
             venditori[venditore] = cifra;
@@ -60,9 +81,26 @@ function vendite_per_venditore(array) {
             venditori[venditore] += cifra;
         }
     }
+    for (var cifra_venditore in venditori) {
+        var percentuale = (venditori[cifra_venditore] / vendite_totali) * 100;
+        percentuale = percentuale.toFixed(1);
+        venditori[cifra_venditore] = percentuale;
+    }
     chiavi2 = Object.keys(venditori);
 
     valori2 = Object.values(venditori);
+}
+
+function modifica_vendite() {
+    $('.add').click(function(){
+        var venditore_selezionato = $('.venditore').val();
+        var mese_selezionato = $('.mese').val();
+        mese_selezionato = moment(mese_selezionato, "MMM");
+        mese_selezionato = mese_selezionato.format("01/MM/2017");
+        var cifra_selezionata = parseInt($('.utente').val());
+        $('.utente').val("");
+        modifica_ajax(venditore_selezionato, mese_selezionato, cifra_selezionata);
+    })
 }
 
 function chart1() {
@@ -75,34 +113,8 @@ function chart1() {
             datasets: [{
                 label: 'Vendite per mese',
                 data: valori,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(255, 99, 132, 1)',
-                ],
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
             }]
         },
